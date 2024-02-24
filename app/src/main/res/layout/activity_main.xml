@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_margin="20dp"
+    tools:context=".MainActivity">
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="24sp"
+        android:layout_margin="20dp"
+        android:text="@string/title"
+        android:textColor="@color/blue"/>
+
+    <ImageView
+        android:src="@drawable/logo"
+        android:layout_width="125dp"
+        android:layout_height="125dp"
+        android:layout_margin="5dp"
+        android:layout_gravity="center"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/lats"
+        android:textColor="@color/blue"
+        android:textSize="24sp"
+        android:layout_margin="10dp"
+        android:id="@+id/latv"
+        android:gravity="start"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/lons"
+        android:textColor="@color/blue"
+        android:textSize="24sp"
+        android:layout_margin="10dp"
+        android:id="@+id/lonv"
+        android:gravity="start"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/alts"
+        android:textColor="@color/blue"
+        android:textSize="24sp"
+        android:layout_margin="10dp"
+        android:id="@+id/altv"
+        android:gravity="start"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/dates"
+        android:textColor="@color/blue"
+        android:textSize="24sp"
+        android:layout_margin="10dp"
+        android:id="@+id/datev"
+        android:gravity="start"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="95dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btngetv"
+            android:layout_width="120dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:layout_margin="4dp"
+            android:backgroundTint="@color/blue"
+            android:text="@string/gets" />
+        <Button
+            android:id="@+id/btnip"
+            android:layout_width="120dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:layout_margin="4dp"
+            android:backgroundTint="@color/blue"
+            android:text="Mandar a Internet" />
+    </LinearLayout>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:id="@+id/numv"
+        android:layout_margin="20dp"
+        android:hint="@string/num"/>
+
+    <Button
+        android:id="@+id/btnsendv"
+        android:layout_width="120dp"
+        android:layout_height="80dp"
+        android:layout_gravity="center"
+        android:layout_margin="4dp"
+        android:backgroundTint="@color/blue"
+        android:text="@string/sends" />
+
+</LinearLayout>

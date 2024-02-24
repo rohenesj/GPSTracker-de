@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">MyKotlinApp</string>
+    <string name="num">Ingrese número telefónico (+57)</string>
+    <string name="gets">Get</string>
+    <string name="sends">Send</string>
+    <string name="lats">Latitude:</string>
+    <string name="lons">Longitude:</string>
+    <string name="alts">Altitude:</string>
+    <string name="dates">Date:</string>
+    <string name="title">GPS Tracker</string>
+
+</resources>
