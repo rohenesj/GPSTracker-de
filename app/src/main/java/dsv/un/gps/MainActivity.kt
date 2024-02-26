@@ -81,7 +81,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             R.id.btnip -> {
                 if(pressed) {
                     val ipIntent = Intent(this, sendToInternet::class.java)
-                    println(stringToActivity)
                     startActivity(ipIntent)
                 }
             }
