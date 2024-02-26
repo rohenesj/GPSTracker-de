@@ -34,13 +34,38 @@
         android:layout_margin="20dp"
         android:hint="123.123.123.123:8888"/>
 
-    <Button
-        android:layout_width="120dp"
-        android:layout_height="80dp"
-        android:id="@+id/btnsendnet"
-        android:layout_margin="4dp"
-        android:text="@string/sends"
-        android:backgroundTint="@color/blue"
-        android:layout_gravity="center"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="95dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnsendnet"
+            android:layout_width="110dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:layout_margin="4dp"
+            android:backgroundTint="@color/blue"
+            android:text="Send TCP" />
+
+        <Button
+            android:id="@+id/btnudp"
+            android:layout_width="110dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:layout_margin="4dp"
+            android:backgroundTint="@color/blue"
+            android:text="Send UDP" />
+
+        <Button
+            android:id="@+id/bothprotocols"
+            android:layout_width="110dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:layout_margin="4dp"
+            android:backgroundTint="@color/blue"
+            android:text="Send Both"/>
+
+    </LinearLayout>
 
 </LinearLayout>
