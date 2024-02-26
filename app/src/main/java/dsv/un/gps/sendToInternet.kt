@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,16 +24,20 @@ class sendToInternet : AppCompatActivity() {
     lateinit var sendMsg: Button
     lateinit var sendUdp: Button
     lateinit var sendBoth: Button
+    lateinit var coordinates: String
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_send_to_internet)
 
+        coordinates = intent.getStringExtra("Coordinates").toString()
         msg = findViewById(R.id.ipaddr)
         sendMsg = findViewById(R.id.btnsendnet)
         sendUdp = findViewById(R.id.btnudp)
         sendBoth = findViewById(R.id.bothprotocols)
+
+        Toast.makeText(applicationContext, coordinates, Toast.LENGTH_LONG).show()
 
         sendMsg.setOnClickListener{
             lifecycleScope.launch(Dispatchers.IO) {
@@ -58,15 +63,12 @@ class sendToInternet : AppCompatActivity() {
     suspend fun sendTcpMessage() {
         val ipaddr = msg.text.toString()
         val fullAddress = ipaddr.split(":")
-        print(0)
         val client = Socket(fullAddress[0],fullAddress[1].toInt())
-        //client.outputStream.write("Hola".toByteArray())
         val tcpReq = PrintWriter(client.getOutputStream(), true)
         val tcpRespond = BufferedReader(InputStreamReader(client.getInputStream()))
-        tcpReq.println("Prueba")
+        tcpReq.println(coordinates)
         println(tcpRespond.readLine())
         client.close()
-
     }
 
     suspend fun sendUdpMessage() {
@@ -75,14 +77,14 @@ class sendToInternet : AppCompatActivity() {
         val address = fullAddress[0].toString()
         val ipAsInetAddressObject = InetAddress.getByName(address)
         val socketAddr = InetSocketAddress(ipAsInetAddressObject,fullAddress[1].toInt())
-        println("1")
         val socket = DatagramSocket()
         socket.broadcast = true
-        val testMsg = "UdpTest"
-        val sendData = testMsg.toByteArray()
-        //println("1")
+        val sendData = coordinates.toByteArray()
         val packet = DatagramPacket(sendData,sendData.size,socketAddr)
-        //println("2")
         socket.send(packet)
+    }
+
+    suspend fun sendToStations() {
+        TODO()
     }
 }

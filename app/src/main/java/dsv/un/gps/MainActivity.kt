@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var num : EditText
     lateinit var sendip : Button
     var pressed = false
-
+    lateinit var stringToActivity : String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         get.setOnClickListener(this)
         send.setOnClickListener(this)
         sendip.setOnClickListener(this)
-        val stringToActivity = "$latitude,$longitude,$altitude,$format"
+
 
 
     }
@@ -81,6 +81,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             R.id.btnip -> {
                 if(pressed) {
                     val ipIntent = Intent(this, sendToInternet::class.java)
+                    ipIntent.putExtra("Coordinates",stringToActivity)
                     startActivity(ipIntent)
                 }
             }
@@ -96,6 +97,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }else{
             // Granted permission
             getCoordinates()
+            // stringToActivity = "$latitude,$longitude,$altitude,$format"
         }
 
     }
@@ -129,6 +131,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 lon.text = "Longitude: $longitude"
                 alt.text = "Altitude: $altitude"
                 dat.text = "Date: ${format.toString()}"
+                stringToActivity = "$latitude,$longitude,$altitude,${date.toString()}"
                 Toast.makeText(applicationContext, "Coordinates Obtained", Toast.LENGTH_LONG).show()
             }
         }
