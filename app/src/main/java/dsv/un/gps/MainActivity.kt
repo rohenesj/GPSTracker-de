@@ -42,13 +42,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var send : Button
     lateinit var num : EditText
     lateinit var sendip : Button
-
+    var pressed = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         lat = findViewById(R.id.latv)
         lon = findViewById(R.id.lonv)
@@ -61,7 +60,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         get.setOnClickListener(this)
         send.setOnClickListener(this)
         sendip.setOnClickListener(this)
-
+        val stringToActivity = "$latitude,$longitude,$altitude,$format"
 
 
     }
@@ -71,14 +70,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         when(v?.id){
             R.id.btngetv ->{
+                pressed = true
                 checkGPSPermissions()
             }
             R.id.btnsendv ->{
-                checkSMSPermissions()
+                if(pressed) {
+                    checkSMSPermissions()
+                }
             }
             R.id.btnip -> {
-                val ipIntent = Intent(this,sendToInternet::class.java)
-                startActivity(ipIntent)
+                if(pressed) {
+                    val ipIntent = Intent(this, sendToInternet::class.java)
+                    println(stringToActivity)
+                    startActivity(ipIntent)
+                }
             }
         }
 
@@ -138,14 +143,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val ms = "Enviado a $tlf"
         val sms = "Latitude: ${df.format(latitude)} Longitude: ${df.format(longitude)} Altitude: ${df.format(altitude)} Date: ${format.toString()} "
         val sms2 = "Lat: ${df.format(latitude)}, Long: ${df.format(longitude)}, Alt: ${df.format(altitude)}, ${format.toString()}"
-        //var smsSend = getSystemService(SmsManager::class.java)
         var smsSend = SmsManager.getDefault()
-        print(0)
         smsSend.sendTextMessage(tlf,null,sms2,null,null)
-        print(2)
         Toast.makeText(applicationContext, sms, Toast.LENGTH_LONG).show()
         Toast.makeText(applicationContext, ms, Toast.LENGTH_LONG).show()
-        print(1)
     }
 
     private fun requestPermission() {
