@@ -22,6 +22,9 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 import android.net.Uri
 import android.telephony.SmsManager
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import java.sql.Timestamp
 import java.util.Date
 import kotlin.time.Duration.Companion.nanoseconds
@@ -44,6 +47,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var sendip : Button
     var pressed = false
     lateinit var stringToActivity : String
+    val df = DecimalFormat("#.##")
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +65,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         get.setOnClickListener(this)
         send.setOnClickListener(this)
         sendip.setOnClickListener(this)
+
+
+
 
 
 
@@ -97,7 +105,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }else{
             // Granted permission
             getCoordinates()
-            // stringToActivity = "$latitude,$longitude,$altitude,$format"
         }
 
     }
@@ -116,8 +123,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     @SuppressLint("MissingPermission")
     private fun getCoordinates() {
-
-        val coordinates = fusedLocationProviderClient.lastLocation
+        val coordinates = fusedLocationProviderClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY,CancellationTokenSource().token)
+        //val coordinates = fusedLocationProviderClient.lastLocation
         coordinates.addOnSuccessListener {
             if(it!=null){
                 latitude = it.latitude
@@ -131,7 +138,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 lon.text = "Longitude: $longitude"
                 alt.text = "Altitude: $altitude"
                 dat.text = "Date: ${format.toString()}"
-                stringToActivity = "$latitude,$longitude,$altitude,${date.toString()}"
+                stringToActivity = "$latitude,$longitude,${df.format(altitude)},${date.toString()}"
                 Toast.makeText(applicationContext, "Coordinates Obtained", Toast.LENGTH_LONG).show()
             }
         }
@@ -140,7 +147,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun sendSMS() {
         val tlf = num.text.toString()
-        val df = DecimalFormat("#.##")
         df.roundingMode = RoundingMode.DOWN
         val ms = "Enviado a $tlf"
         val sms = "Latitude: ${df.format(latitude)} Longitude: ${df.format(longitude)} Altitude: ${df.format(altitude)} Date: ${format.toString()} "
@@ -188,8 +194,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
         if(requestCode == 111){
             if(grantResults.isNotEmpty() && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                //sendSMS()
-                print("Hello")
+                sendSMS()
             }
         }
 

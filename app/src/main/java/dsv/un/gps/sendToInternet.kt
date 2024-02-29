@@ -36,19 +36,22 @@ class sendToInternet : AppCompatActivity() {
         sendMsg = findViewById(R.id.btnsendnet)
         sendUdp = findViewById(R.id.btnudp)
         sendBoth = findViewById(R.id.bothprotocols)
+        val message = SendData()
+        //val ip = msg.text.toString()
 
         Toast.makeText(applicationContext, coordinates, Toast.LENGTH_LONG).show()
 
         sendMsg.setOnClickListener{
             lifecycleScope.launch(Dispatchers.IO) {
-                //sendTcpMessage()
                 sendTcpMessage()
             }
         }
 
         sendUdp.setOnClickListener{
             lifecycleScope.launch(Dispatchers.IO) {
-                sendUdpMessage()
+                //sendUdpMessage()
+                message.sendUdp(msg,coordinates)
+
             }
         }
 
