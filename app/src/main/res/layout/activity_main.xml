@@ -6,7 +6,9 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:layout_margin="20dp"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:backgroundTint="@color/blue">
+
 
 
     <TextView
@@ -72,7 +74,7 @@
 
         <Button
             android:id="@+id/btngetv"
-            android:layout_width="120dp"
+            android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_gravity="center"
             android:layout_margin="4dp"
@@ -80,12 +82,29 @@
             android:text="@string/gets" />
         <Button
             android:id="@+id/btnip"
-            android:layout_width="120dp"
+            android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_gravity="center"
             android:layout_margin="4dp"
             android:backgroundTint="@color/blue"
-            android:text="Mandar a Internet" />
+            android:text="Web" />
+        <Button
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:backgroundTint="@color/blue"
+            android:text="Auto"
+            android:layout_margin="4dp"
+            android:id="@+id/serviceButton" />
+        <Button
+            android:layout_margin="4dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:text="Stop"
+            android:backgroundTint="@color/blue"
+            android:id="@+id/StopService"/>
+
     </LinearLayout>
 
     <EditText

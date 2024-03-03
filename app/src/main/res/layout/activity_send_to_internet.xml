@@ -68,4 +68,27 @@
 
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="95dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:layout_width="110dp"
+            android:layout_height="80dp"
+            android:id="@+id/Server1Button"
+            android:backgroundTint="@color/blue"
+            android:layout_gravity="center"
+            android:layout_margin="4dp"
+            android:text="Save Server 1"/>
+        <Button
+            android:layout_width="110dp"
+            android:layout_height="80dp"
+            android:id="@+id/Server2Button"
+            android:backgroundTint="@color/blue"
+            android:layout_gravity="center"
+            android:layout_margin="4dp"
+            android:text="Save Server 2"/>
+
+    </LinearLayout>
 </LinearLayout>

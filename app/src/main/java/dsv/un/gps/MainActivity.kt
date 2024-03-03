@@ -2,7 +2,6 @@ package dsv.un.gps
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
@@ -14,25 +13,21 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import java.math.RoundingMode
 import java.text.DecimalFormat
-import android.net.Uri
+import android.os.Build
 import android.telephony.SmsManager
-import com.google.android.gms.location.LocationRequest
+import androidx.annotation.RequiresApi
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import java.sql.Timestamp
-import java.util.Date
-import kotlin.time.Duration.Companion.nanoseconds
+
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-    //private lateinit var date: ZonedDateTime
     private lateinit var format: String
     private var latitude: Double = 0.0
     private var longitude: Double = 0.0
@@ -43,16 +38,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var dat : TextView
     lateinit var get : Button
     lateinit var send : Button
+    lateinit var stop : Button
     lateinit var num : EditText
     lateinit var sendip : Button
     var pressed = false
     lateinit var stringToActivity : String
     val df = DecimalFormat("#.##")
+    lateinit var service: Button
 
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS),0)
+        }
+
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         lat = findViewById(R.id.latv)
         lon = findViewById(R.id.lonv)
@@ -62,9 +64,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         send = findViewById<Button>(R.id.btnsendv)
         num = findViewById(R.id.numv)
         sendip = findViewById<Button>(R.id.btnip)
+        service = findViewById<Button>(R.id.serviceButton)
+        stop = findViewById<Button>(R.id.StopService)
+        stop.setOnClickListener(this)
         get.setOnClickListener(this)
         send.setOnClickListener(this)
         sendip.setOnClickListener(this)
+        service.setOnClickListener(this)
 
 
 
@@ -73,6 +79,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onClick(v: View?) {
 
 
@@ -93,6 +100,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     startActivity(ipIntent)
                 }
             }
+            R.id.serviceButton -> {
+                requestBackgroundLocation()
+                startService(Intent(this,BackgroundTracking::class.java))
+            }
+            R.id.StopService -> {
+                stopService(Intent(this,BackgroundTracking::class.java))
+            }
         }
 
     }
@@ -105,6 +119,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }else{
             // Granted permission
             getCoordinates()
+
         }
 
     }
@@ -124,16 +139,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     @SuppressLint("MissingPermission")
     private fun getCoordinates() {
         val coordinates = fusedLocationProviderClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY,CancellationTokenSource().token)
-        //val coordinates = fusedLocationProviderClient.lastLocation
         coordinates.addOnSuccessListener {
             if(it!=null){
                 latitude = it.latitude
                 longitude = it.longitude
                 altitude = it.altitude
                 val date = it.time
-               // date = ZonedDateTime.now()
                 format = Timestamp(date).toString()
-                //format = DateTimeFormatter.ofPattern("EEE dd-MM-yyyy HH:mm:ss").format(date)
                 lat.text = "Latitude: $latitude"
                 lon.text = "Longitude: $longitude"
                 alt.text = "Altitude: $altitude"
@@ -173,14 +185,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun requestSMSPermission() {
         if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.SEND_SMS)){
-           // Toast.makeText(applicationContext, "This app needs SMS permissions", Toast.LENGTH_LONG).show()
+            Toast.makeText(applicationContext, "This app needs SMS permissions", Toast.LENGTH_LONG).show()
             if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECEIVE_SMS)){
-               // Toast.makeText(applicationContext, "This app needs SMS permissions", Toast.LENGTH_LONG).show()
+                Toast.makeText(applicationContext, "This app needs SMS permissions", Toast.LENGTH_LONG).show()
             } else {
                  ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECEIVE_SMS),111)
             }
         } else {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.SEND_SMS),111)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun requestBackgroundLocation() {
+        if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)){
+            Toast.makeText(applicationContext, "This app needs Background location permissions", Toast.LENGTH_LONG).show()
+        } else {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),222)
         }
     }
 
@@ -195,6 +216,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         if(requestCode == 111){
             if(grantResults.isNotEmpty() && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                 sendSMS()
+            }
+        }
+        if(requestCode == 222) {
+            if(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getCoordinates()
             }
         }
 
