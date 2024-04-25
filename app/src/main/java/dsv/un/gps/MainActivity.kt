@@ -2,7 +2,13 @@ package dsv.un.gps
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -20,14 +26,21 @@ import java.text.DecimalFormat
 import android.os.Build
 import android.telephony.SmsManager
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.InputStream
+import java.io.OutputStream
 import java.sql.Timestamp
+import java.util.UUID
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private lateinit var bluetoothAdapter: BluetoothAdapter
     private lateinit var format: String
     private var latitude: Double = 0.0
     private var longitude: Double = 0.0
@@ -43,8 +56,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var sendip : Button
     var pressed = false
     lateinit var stringToActivity : String
+    var response = ""
     val df = DecimalFormat("#.##")
     lateinit var service: Button
+    lateinit var socket: BluetoothSocket
 
 
     @SuppressLint("MissingInflatedId")
@@ -55,6 +70,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS),0)
         }
 
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         lat = findViewById(R.id.latv)
         lon = findViewById(R.id.lonv)
@@ -71,12 +87,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         send.setOnClickListener(this)
         sendip.setOnClickListener(this)
         service.setOnClickListener(this)
+        if (bluetoothAdapter == null) {
+            Toast.makeText(this, "No Bluetooth", Toast.LENGTH_SHORT).show()
+            finish()
+        }
 
 
 
 
 
 
+    }
+
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            if (BluetoothDevice.ACTION_FOUND == action) {
+                val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+            }
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -89,9 +118,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 checkGPSPermissions()
             }
             R.id.btnsendv ->{
-                if(pressed) {
-                    checkSMSPermissions()
+                lifecycleScope.launch(Dispatchers.IO) {
+                    checkBluetoothDevices()
                 }
+                Toast.makeText(this, "Bluetooth Connected?",Toast.LENGTH_SHORT).show()
             }
             R.id.btnip -> {
                 if(pressed) {
@@ -105,10 +135,34 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 startService(Intent(this,BackgroundTracking::class.java))
             }
             R.id.StopService -> {
-                stopService(Intent(this,BackgroundTracking::class.java))
+                response = sendSerialToBluetooth()
+                Toast.makeText(this, response,Toast.LENGTH_SHORT).show()
             }
         }
 
+    }
+
+    @SuppressLint("MissingPermission")
+    suspend fun checkBluetoothDevices(){
+        val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
+        registerReceiver(receiver, discoverDevicesIntent)
+        bluetoothAdapter.startDiscovery()
+        val device = bluetoothAdapter.getRemoteDevice("00:10:CC:4F:36:03") //F0:03:8C:C7:55:6A pc Juan, 00:10:CC:4F:36:03 ELM,327
+        val MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+        socket = device.createRfcommSocketToServiceRecord(MY_UUID)
+        socket.connect()
+        println("Success")
+    }
+    private fun sendSerialToBluetooth(): String {
+        val inputStream: InputStream = socket.inputStream
+        val outputStream: OutputStream = socket.outputStream
+        val command = num.text.toString()
+        outputStream.write(command.toByteArray())
+        val buffer = ByteArray(1024)
+        val bytesRead = inputStream.read(buffer)
+        val response = buffer.copyOf(bytesRead).toString(Charsets.UTF_8)
+        socket.close()
+        return response
     }
 
     private fun checkGPSPermissions() {
@@ -226,6 +280,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(receiver)
+    }
 
 
 }

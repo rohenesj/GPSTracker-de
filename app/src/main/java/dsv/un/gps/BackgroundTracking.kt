@@ -98,4 +98,5 @@ class BackgroundTracking: Service() {
             }
         }
     }
+
 }
