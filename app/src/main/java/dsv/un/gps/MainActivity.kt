@@ -29,6 +29,7 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.InputStream
@@ -60,6 +61,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     val df = DecimalFormat("#.##")
     lateinit var service: Button
     lateinit var socket: BluetoothSocket
+    private val mainScope = CoroutineScope(Dispatchers.Main)
 
 
     @SuppressLint("MissingInflatedId")
@@ -120,6 +122,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             R.id.btnsendv ->{
                 lifecycleScope.launch(Dispatchers.IO) {
                     checkBluetoothDevices()
+                    Thread.sleep(1000)
+                    response = sendSerialToBluetooth()
+                    println("Response=$response")
+                    val bytes = response.split(" ")
+                    val A = bytes[3].toInt(radix = 16)
+                    val B = bytes[4].toInt(radix = 16)
+                    println("A = $A, B = $B")
+                    val data = ((256*A)+B)/4
+                    val obdData = data.toString()
+                    println(obdData)
                 }
                 Toast.makeText(this, "Bluetooth Connected?",Toast.LENGTH_SHORT).show()
             }
@@ -154,13 +166,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         println("Success")
     }
     private fun sendSerialToBluetooth(): String {
-        val inputStream: InputStream = socket.inputStream
-        val outputStream: OutputStream = socket.outputStream
-        val command = num.text.toString()
+        var inputStream: InputStream = socket.inputStream
+        var outputStream: OutputStream = socket.outputStream
+        val command = "01 0C"
         outputStream.write(command.toByteArray())
         val buffer = ByteArray(1024)
         val bytesRead = inputStream.read(buffer)
-        val response = buffer.copyOf(bytesRead).toString(Charsets.UTF_8)
+        var response = buffer.copyOf(bytesRead).toString(Charsets.UTF_8)
+        inputStream= socket.inputStream
+        outputStream = socket.outputStream
+        outputStream.write(command.toByteArray())
+        val bytesRead2 = inputStream.read(buffer)
+        response = buffer.copyOf(bytesRead2).toString(Charsets.UTF_8)
         socket.close()
         return response
     }

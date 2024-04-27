@@ -2,7 +2,13 @@ package dsv.un.gps
 
 import android.annotation.SuppressLint
 import android.app.Service
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.IBinder
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
@@ -20,6 +26,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.UUID
 
 
 class BackgroundTracking: Service() {
@@ -29,6 +38,18 @@ class BackgroundTracking: Service() {
     private val scope = CoroutineScope(Dispatchers.IO + job)
     private val mainScope = CoroutineScope(Dispatchers.Main)
     private var payload = ""
+    lateinit var socket: BluetoothSocket
+    lateinit var bluetoothAdapter: BluetoothAdapter
+    lateinit var response: String
+    lateinit var obdData: String
+    val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            if (BluetoothDevice.ACTION_FOUND == action) {
+                val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+            }
+        }
+    }
 
 
 
@@ -41,6 +62,7 @@ class BackgroundTracking: Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Toast.makeText(applicationContext, "The Service is Called", Toast.LENGTH_LONG).show()
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         start()
         scope.launch {
             sendToStations()
@@ -62,13 +84,34 @@ class BackgroundTracking: Service() {
         val server1 = addressStore.getAddress1()
         val server2 = addressStore.getAddress2()
             while(true) {
+                checkBluetoothDevices()
+                Thread.sleep(1000)
+                response = sendSerialToBluetooth()
+                println("Response=$response")
+                val bytes = response.split(" ")
+                val A = bytes[3].toInt(radix = 16)
+                val B = bytes[4].toInt(radix = 16)
+                println("A = $A, B = $B")
+                val data = ((256*A)+B)/4
+                obdData = data.toString()
                 mainScope.launch{getCoordinates(fusedLocationProviderClient)}
                 sendUdpMessage(payload, server1, server2)
-                println("STOP")
                 Thread.sleep(10000)
             }
 
     }
+
+    private suspend fun sendToStationsNoOBD() {
+        val server1 = addressStore.getAddress1()
+        val server2 = addressStore.getAddress2()
+        while(true) {
+            mainScope.launch{getCoordinates(fusedLocationProviderClient)}
+            sendUdpMessage(payload, server1, server2)
+            Thread.sleep(10000)
+        }
+
+    }
+
     suspend fun sendUdpMessage(payload: String,server1:String,server2: String) {
         val fullAddress1 = server1.split(":")
         val fullAddress2 = server2.split(":")
@@ -94,9 +137,37 @@ class BackgroundTracking: Service() {
                 val longitude = it.longitude
                 val altitude = it.altitude
                 val date = it.time
-                payload = "$latitude,$longitude,${df.format(altitude)},${date.toString()}"
+                payload = "$latitude,$longitude,${df.format(altitude)},${date.toString()},${obdData}"
             }
         }
     }
-
+    @SuppressLint("MissingPermission")
+    suspend fun checkBluetoothDevices(){
+        val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
+        registerReceiver(receiver, discoverDevicesIntent)
+        bluetoothAdapter.startDiscovery()
+        val device = bluetoothAdapter.getRemoteDevice("F0:03:8C:C7:55:6A") //F0:03:8C:C7:55:6A pc Juan, 00:10:CC:4F:36:03 ELM,327
+        val MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+        socket = device.createRfcommSocketToServiceRecord(MY_UUID)
+        socket.connect()
+        println("Success")
+    }
+    private fun sendSerialToBluetooth(): String {
+        var inputStream: InputStream = socket.inputStream
+        var outputStream: OutputStream = socket.outputStream
+        val command = "01 0C"
+        outputStream.write(command.toByteArray())
+        val buffer = ByteArray(1024)
+        val bytesRead = inputStream.read(buffer)
+        var response = buffer.copyOf(bytesRead).toString(Charsets.UTF_8)
+        inputStream= socket.inputStream
+        outputStream = socket.outputStream
+        outputStream.write(command.toByteArray())
+        val bytesRead2 = inputStream.read(buffer)
+        response = buffer.copyOf(bytesRead2).toString(Charsets.UTF_8)
+        socket.close()
+        println("Sent $response")
+        println("Socket Closed")
+        return response
+    }
 }
