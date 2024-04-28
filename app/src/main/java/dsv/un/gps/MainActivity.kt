@@ -61,7 +61,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     val df = DecimalFormat("#.##")
     lateinit var service: Button
     lateinit var socket: BluetoothSocket
-    private val mainScope = CoroutineScope(Dispatchers.Main)
 
 
     @SuppressLint("MissingInflatedId")
@@ -126,8 +125,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     response = sendSerialToBluetooth()
                     println("Response=$response")
                     val bytes = response.split(" ")
-                    val A = bytes[3].toInt(radix = 16)
-                    val B = bytes[4].toInt(radix = 16)
+                    val A = bytes[2].toInt(radix = 16)
+                    val B = bytes[3].toInt(radix = 16)
                     println("A = $A, B = $B")
                     val data = ((256*A)+B)/4
                     val obdData = data.toString()
@@ -173,6 +172,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val buffer = ByteArray(1024)
         val bytesRead = inputStream.read(buffer)
         var response = buffer.copyOf(bytesRead).toString(Charsets.UTF_8)
+        Thread.sleep(500)
         inputStream= socket.inputStream
         outputStream = socket.outputStream
         outputStream.write(command.toByteArray())

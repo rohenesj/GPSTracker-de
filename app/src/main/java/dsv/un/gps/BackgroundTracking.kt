@@ -89,11 +89,12 @@ class BackgroundTracking: Service() {
                 response = sendSerialToBluetooth()
                 println("Response=$response")
                 val bytes = response.split(" ")
-                val A = bytes[3].toInt(radix = 16)
-                val B = bytes[4].toInt(radix = 16)
+                val A = bytes[2].toInt(radix = 16)
+                val B = bytes[3].toInt(radix = 16)
                 println("A = $A, B = $B")
                 val data = ((256*A)+B)/4
                 obdData = data.toString()
+                println(obdData)
                 mainScope.launch{getCoordinates(fusedLocationProviderClient)}
                 sendUdpMessage(payload, server1, server2)
                 Thread.sleep(10000)
@@ -146,7 +147,7 @@ class BackgroundTracking: Service() {
         val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
         registerReceiver(receiver, discoverDevicesIntent)
         bluetoothAdapter.startDiscovery()
-        val device = bluetoothAdapter.getRemoteDevice("F0:03:8C:C7:55:6A") //F0:03:8C:C7:55:6A pc Juan, 00:10:CC:4F:36:03 ELM,327
+        val device = bluetoothAdapter.getRemoteDevice("00:10:CC:4F:36:03") //F0:03:8C:C7:55:6A pc Juan, 00:10:CC:4F:36:03 ELM,327
         val MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         socket = device.createRfcommSocketToServiceRecord(MY_UUID)
         socket.connect()
@@ -160,13 +161,14 @@ class BackgroundTracking: Service() {
         val buffer = ByteArray(1024)
         val bytesRead = inputStream.read(buffer)
         var response = buffer.copyOf(bytesRead).toString(Charsets.UTF_8)
+        Thread.sleep(500)
         inputStream= socket.inputStream
         outputStream = socket.outputStream
         outputStream.write(command.toByteArray())
         val bytesRead2 = inputStream.read(buffer)
         response = buffer.copyOf(bytesRead2).toString(Charsets.UTF_8)
         socket.close()
-        println("Sent $response")
+        println("Recieved $response")
         println("Socket Closed")
         return response
     }
