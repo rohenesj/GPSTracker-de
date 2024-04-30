@@ -32,6 +32,7 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.sql.Timestamp
@@ -61,6 +62,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     val df = DecimalFormat("#.##")
     lateinit var service: Button
     lateinit var socket: BluetoothSocket
+    lateinit var obdData: String
 
 
     @SuppressLint("MissingInflatedId")
@@ -120,16 +122,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
             R.id.btnsendv ->{
                 lifecycleScope.launch(Dispatchers.IO) {
-                    checkBluetoothDevices()
-                    Thread.sleep(1000)
-                    response = sendSerialToBluetooth()
-                    println("Response=$response")
-                    val bytes = response.split(" ")
-                    val A = bytes[2].toInt(radix = 16)
-                    val B = bytes[3].toInt(radix = 16)
-                    println("A = $A, B = $B")
-                    val data = ((256*A)+B)/4
-                    val obdData = data.toString()
+                    obdData = "No Data"
+                    try {
+                        checkBluetoothDevices()
+                        Thread.sleep(1000)
+                        response = sendSerialToBluetooth()
+                        println("Response=$response")
+                        val bytes = response.split(" ")
+                        val A = bytes[2].toInt(radix = 16)
+                        val B = bytes[3].toInt(radix = 16)
+                        println("A = $A, B = $B")
+                        val data = ((256 * A) + B) / 4
+                        obdData = data.toString()
+                  } catch (e: IOException){
+                      println("OBD Not found")
+                   }
                     println(obdData)
                 }
                 Toast.makeText(this, "Bluetooth Connected?",Toast.LENGTH_SHORT).show()

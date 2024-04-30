@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
@@ -84,16 +85,21 @@ class BackgroundTracking: Service() {
         val server1 = addressStore.getAddress1()
         val server2 = addressStore.getAddress2()
             while(true) {
-                checkBluetoothDevices()
-                Thread.sleep(1000)
-                response = sendSerialToBluetooth()
-                println("Response=$response")
-                val bytes = response.split(" ")
-                val A = bytes[2].toInt(radix = 16)
-                val B = bytes[3].toInt(radix = 16)
-                println("A = $A, B = $B")
-                val data = ((256*A)+B)/4
-                obdData = data.toString()
+                obdData = "No Data"
+                try {
+                    checkBluetoothDevices()
+                    Thread.sleep(1000)
+                    response = sendSerialToBluetooth()
+                    println("Response=$response")
+                    val bytes = response.split(" ")
+                    val A = bytes[2].toInt(radix = 16)
+                    val B = bytes[3].toInt(radix = 16)
+                    println("A = $A, B = $B")
+                    val data = ((256*A)+B)/4
+                    obdData = data.toString()
+                } catch (e: IOException){
+                    println("OBD Not found")
+                }
                 println(obdData)
                 mainScope.launch{getCoordinates(fusedLocationProviderClient)}
                 sendUdpMessage(payload, server1, server2)
