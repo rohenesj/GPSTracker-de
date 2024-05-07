@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_height="match_parent"
+    tools:context=".CarSelector"
+    android:layout_margin="20dp"
+    android:backgroundTint="@color/blue">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="24sp"
+        android:layout_margin="20dp"
+        android:text="Welcome to GPS Tracker!"
+        android:textColor="@color/blue"/>
+
+    <ImageView
+        android:src="@drawable/logo"
+        android:layout_width="125dp"
+        android:layout_height="125dp"
+        android:layout_margin="60dp"
+        android:layout_gravity="center"/>
+    <Button
+        android:id="@+id/selectCar1"
+        android:layout_width="300dp"
+        android:layout_gravity="center"
+        android:layout_height="60dp"
+        android:layout_margin="40dp"
+        android:text="Truck #1"
+        android:backgroundTint="@color/blue"/>
+
+    <Button
+        android:id="@+id/selectCar2"
+        android:layout_width="300dp"
+        android:layout_gravity="center"
+        android:layout_height="60dp"
+        android:backgroundTint="@color/blue"
+        android:text="Truck #2" />
+
+</LinearLayout>

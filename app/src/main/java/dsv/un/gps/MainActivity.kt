@@ -37,6 +37,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.sql.Timestamp
 import java.util.UUID
+import dsv.un.gps.RunService.Companion.addressStore
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -51,6 +52,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var lon : TextView
     lateinit var alt : TextView
     lateinit var dat : TextView
+    lateinit var truck: TextView
     lateinit var get : Button
     lateinit var send : Button
     lateinit var stop : Button
@@ -63,7 +65,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var service: Button
     lateinit var socket: BluetoothSocket
     lateinit var obdData: String
-
+    lateinit var currentTruck: String
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,13 +74,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS),0)
         }
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH_SCAN),1)
+        }
+        val carIntent = Intent(this,CarSelector::class.java)
+        startActivity(carIntent)
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         lat = findViewById(R.id.latv)
         lon = findViewById(R.id.lonv)
         alt = findViewById(R.id.altv)
         dat = findViewById(R.id.datev)
+        truck = findViewById(R.id.carSelected)
         get = findViewById<Button>(R.id.btngetv)
         send = findViewById<Button>(R.id.btnsendv)
         num = findViewById(R.id.numv)
@@ -90,6 +97,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         send.setOnClickListener(this)
         sendip.setOnClickListener(this)
         service.setOnClickListener(this)
+        currentTruck = addressStore.getCar()
         if (bluetoothAdapter == null) {
             Toast.makeText(this, "No Bluetooth", Toast.LENGTH_SHORT).show()
             finish()
@@ -149,6 +157,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
             }
             R.id.serviceButton -> {
+                currentTruck = addressStore.getCar()
                 requestBackgroundLocation()
                 startService(Intent(this,BackgroundTracking::class.java))
             }
@@ -216,6 +225,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     @SuppressLint("MissingPermission")
     private fun getCoordinates() {
+        currentTruck = addressStore.getCar()
         val coordinates = fusedLocationProviderClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY,CancellationTokenSource().token)
         coordinates.addOnSuccessListener {
             if(it!=null){
@@ -228,6 +238,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 lon.text = "Longitude: $longitude"
                 alt.text = "Altitude: $altitude"
                 dat.text = "Date: ${format.toString()}"
+                truck.text = "Truck: $currentTruck"
                 stringToActivity = "$latitude,$longitude,${df.format(altitude)},${date.toString()}"
                 Toast.makeText(applicationContext, "Coordinates Obtained", Toast.LENGTH_LONG).show()
             }

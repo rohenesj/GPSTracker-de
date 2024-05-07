@@ -135,6 +135,7 @@ class BackgroundTracking: Service() {
 
     @SuppressLint("MissingPermission")
     private suspend fun getCoordinates(fusedLocationProviderClient: FusedLocationProviderClient) {
+        val truck = addressStore.getCar()
         val coordinates = fusedLocationProviderClient.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,
             CancellationTokenSource().token)
@@ -144,7 +145,7 @@ class BackgroundTracking: Service() {
                 val longitude = it.longitude
                 val altitude = it.altitude
                 val date = it.time
-                payload = "$latitude,$longitude,${df.format(altitude)},${date.toString()},${obdData}"
+                payload = "$latitude,$longitude,${df.format(altitude)},${date.toString()},${obdData},${truck}"
             }
         }
     }

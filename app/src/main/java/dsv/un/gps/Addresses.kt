@@ -17,7 +17,12 @@ class Addresses(val context:Context) {
     fun saveAddress2(address:String){
         store.edit().putString("Address 2",address).apply()
     }
-
+    fun carSelector(car:String){
+        store.edit().putString("Car",car).apply()
+    }
+    fun getCar() :String {
+        return store.getString("Car","")!!
+    }
     fun getAddress1() :String {
         return store.getString("Address 1","")!!
     }
