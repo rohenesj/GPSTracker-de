@@ -5,6 +5,7 @@ import android.app.Service
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
+import android.bluetooth.BluetoothSocketException
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -81,42 +82,39 @@ class BackgroundTracking: Service() {
     }
 
 
+
     private suspend fun sendToStations() {
         val server1 = addressStore.getAddress1()
         val server2 = addressStore.getAddress2()
-            while(true) {
-                obdData = "No Data"
-                try {
-                    checkBluetoothDevices()
-                    Thread.sleep(1000)
-                    response = sendSerialToBluetooth()
-                    println("Response=$response")
-                    val bytes = response.split(" ")
-                    val A = bytes[2].toInt(radix = 16)
-                    val B = bytes[3].toInt(radix = 16)
-                    println("A = $A, B = $B")
-                    val data = ((256*A)+B)/4
-                    obdData = data.toString()
-                } catch (e: IOException){
-                    println("OBD Not found")
-                }
-                println(obdData)
-                mainScope.launch{getCoordinates(fusedLocationProviderClient)}
-                sendUdpMessage(payload, server1, server2)
-                Thread.sleep(10000)
-            }
-
-    }
-
-    private suspend fun sendToStationsNoOBD() {
-        val server1 = addressStore.getAddress1()
-        val server2 = addressStore.getAddress2()
         while(true) {
-            mainScope.launch{getCoordinates(fusedLocationProviderClient)}
-            sendUdpMessage(payload, server1, server2)
-            Thread.sleep(10000)
+            try {
+                checkBluetoothDevices()
+                Thread.sleep(1000)
+                val firstCommand = "AT E0"
+                Thread.sleep(500)
+                val outputStream = socket.outputStream
+                outputStream.write(firstCommand.toByteArray())
+                while(true) {
+                    try {
+                        Thread.sleep(2000)
+                        obdData = serialTest()
+                        mainScope.launch { getCoordinates(fusedLocationProviderClient) }
+                        sendUdpMessage(payload, server1, server2)
+                    } catch (e: IOException) {
+                        socket.close()
+                        break
+                    }
+                }
+            } catch (e: IOException) {
+                obdData = "No Data"
+                mainScope.launch { getCoordinates(fusedLocationProviderClient) }
+                sendUdpMessage(payload, server1, server2)
+            } catch (e: BluetoothSocketException) {
+                obdData = "No Data"
+                mainScope.launch { getCoordinates(fusedLocationProviderClient) }
+                sendUdpMessage(payload, server1, server2)
+            }
         }
-
     }
 
     suspend fun sendUdpMessage(payload: String,server1:String,server2: String) {
@@ -154,7 +152,7 @@ class BackgroundTracking: Service() {
         val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
         registerReceiver(receiver, discoverDevicesIntent)
         bluetoothAdapter.startDiscovery()
-        val device = bluetoothAdapter.getRemoteDevice("00:10:CC:4F:36:03") //F0:03:8C:C7:55:6A pc Juan, 00:10:CC:4F:36:03 ELM,327
+        val device = bluetoothAdapter.getRemoteDevice("00:10:CC:4F:36:03") //F0:03:8C:C7:55:6A pc Juan, 00:10:CC:4F:36:03 ELM,327 00:10:CC:4F:36:03
         val MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         socket = device.createRfcommSocketToServiceRecord(MY_UUID)
         socket.connect()
@@ -174,9 +172,34 @@ class BackgroundTracking: Service() {
         outputStream.write(command.toByteArray())
         val bytesRead2 = inputStream.read(buffer)
         response = buffer.copyOf(bytesRead2).toString(Charsets.UTF_8)
-        socket.close()
         println("Recieved $response")
-        println("Socket Closed")
-        return response
+        val bytes = response.split(" ")
+        val A = bytes[2].toInt(radix = 16)
+        val B = bytes[3].toInt(radix = 16)
+        println("A = $A, B = $B")
+        val data = ((256*A)+B)/4
+        obdData = data.toString()
+        return obdData
+    }
+    private fun serialTest(): String {
+        obdData = "No Data"
+        val inputStream: InputStream = socket.inputStream
+        val outputStream: OutputStream = socket.outputStream
+        val command = "01 0C"
+        val pattern = Regex("(?<=41 0C\\s)[0-9A-F]{2}\\s[0-9A-F]{2}")
+        outputStream.write(command.toByteArray())
+        val buffer = ByteArray(1024)
+        val bytesRead = inputStream.read(buffer)
+        var response = buffer.copyOf(bytesRead).toString(Charsets.UTF_8)
+        val bytes = response.split(" ")
+        val matchResult = pattern.find(response)
+        //if (bytes[0] == "41") {
+        //    val A = bytes[2].toInt(radix = 16)
+        //    val B = bytes[3].toInt(radix = 16)
+        //    println("A = $A, B = $B")
+        //    val data = ((256*A)+B)/4
+        //    obdData = data.toString()
+
+        return matchResult?.value ?: "No Data"
     }
 }

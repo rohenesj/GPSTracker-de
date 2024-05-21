@@ -88,7 +88,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         truck = findViewById(R.id.carSelected)
         get = findViewById<Button>(R.id.btngetv)
         send = findViewById<Button>(R.id.btnsendv)
-        num = findViewById(R.id.numv)
+
         sendip = findViewById<Button>(R.id.btnip)
         service = findViewById<Button>(R.id.serviceButton)
         stop = findViewById<Button>(R.id.StopService)
@@ -150,9 +150,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 Toast.makeText(this, "Bluetooth Connected?",Toast.LENGTH_SHORT).show()
             }
             R.id.btnip -> {
-                if(pressed) {
+                if (pressed) {
                     val ipIntent = Intent(this, sendToInternet::class.java)
-                    ipIntent.putExtra("Coordinates",stringToActivity)
+                    ipIntent.putExtra("Coordinates", stringToActivity)
                     startActivity(ipIntent)
                 }
             }
@@ -211,17 +211,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     }
 
-    private fun checkSMSPermissions() {
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-            print(1)
-            requestSMSPermission()
-
-        } else {
-            print(0)
-            sendSMS()
-        }
-    }
-
 
     @SuppressLint("MissingPermission")
     private fun getCoordinates() {
@@ -246,17 +235,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     }
 
-    private fun sendSMS() {
-        val tlf = num.text.toString()
-        df.roundingMode = RoundingMode.DOWN
-        val ms = "Enviado a $tlf"
-        val sms = "Latitude: ${df.format(latitude)} Longitude: ${df.format(longitude)} Altitude: ${df.format(altitude)} Date: ${format.toString()} "
-        val sms2 = "Lat: ${df.format(latitude)}, Long: ${df.format(longitude)}, Alt: ${df.format(altitude)}, ${format.toString()}"
-        var smsSend = SmsManager.getDefault()
-        smsSend.sendTextMessage(tlf,null,sms2,null,null)
-        Toast.makeText(applicationContext, sms, Toast.LENGTH_LONG).show()
-        Toast.makeText(applicationContext, ms, Toast.LENGTH_LONG).show()
-    }
 
     private fun requestPermission() {
         if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)){
@@ -272,18 +250,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun requestSMSPermission() {
-        if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.SEND_SMS)){
-            Toast.makeText(applicationContext, "This app needs SMS permissions", Toast.LENGTH_LONG).show()
-            if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECEIVE_SMS)){
-                Toast.makeText(applicationContext, "This app needs SMS permissions", Toast.LENGTH_LONG).show()
-            } else {
-                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECEIVE_SMS),111)
-            }
-        } else {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.SEND_SMS),111)
-        }
-    }
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun requestBackgroundLocation() {
@@ -302,11 +268,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 getCoordinates()
             }
         }
-        if(requestCode == 111){
-            if(grantResults.isNotEmpty() && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                sendSMS()
-            }
-        }
+
         if(requestCode == 222) {
             if(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 getCoordinates()
